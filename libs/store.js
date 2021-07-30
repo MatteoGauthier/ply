@@ -1,21 +1,34 @@
 import { useLayoutEffect } from "react";
 import create from "zustand";
 import createContext from "zustand/context";
+import { devtools } from "zustand/middleware";
+
+const log = (config) => (set, get, api) =>
+	config(
+		(args) => {
+			console.log("🐻 applying", args);
+			set(args);
+			console.log("🐻 new state", get());
+		},
+		get,
+		api
+	);
 
 let store;
 
 const initialState = {
 	isPlaying: false,
+	spotifyRunning: false,
 	song: {
 		name: "",
-		artist: "",
-		album: "",
+		artists: null,
+		album: null,
 		progress_ms: 0,
 		duration_ms: 0,
-		link: "",
-		covers: null
+		uri: "",
+		covers: null,
 	},
-	progress: 0
+	progress: 0,
 };
 
 const zustandContext = createContext();
@@ -25,41 +38,54 @@ export const Provider = zustandContext.Provider;
 export const useStore = zustandContext.useStore;
 
 export const initializeStore = (preloadedState = {}) => {
-	return create((set, get) => ({
-		...initialState,
-		...preloadedState,
-		setNotPlaying: () => {
-			set({
-				isPlaying: false,
-			});
-		},
-		setPlaying: () => {
-			set({
-				isPlaying: true,
-			});
-		},
-		setSong: ({ name, artist, album, progress_ms, duration_ms, link, covers }) => {
-			set({
-				song: {
-					name,
-					artist,
-					album,
-					progress_ms,
-					duration_ms,
-					link,
-					covers
+	return create(
+		devtools(
+			log((set, get) => ({
+				...initialState,
+				...preloadedState,
+				setNotPlaying: () => {
+					set({
+						isPlaying: false,
+					});
 				},
-				progress: progress_ms
-			});
-		},
+				setPlaying: () => {
+					set({
+						isPlaying: true,
+					});
+				},
+				setSpotifyNotRunning: () => {
+					set({
+						spotifyRunning: false,
+					});
+				},
+				setSpotifyRunning: () => {
+					set({
+						spotifyRunning: true,
+					});
+				},
+				setSong: ({ name, artists, album, progress_ms, duration_ms, uri, covers }) => {
+					set({
+						song: {
+							name,
+							artists,
+							album,
+							progress_ms,
+							duration_ms,
+							uri,
+							covers,
+						},
+						progress: progress_ms,
+					});
+				},
 
-
-		reset: () => {
-			set({
-				isPlaying: initialState.isPlaying,
-			});
-		},
-	}));
+				reset: () => {
+					set({
+						isPlaying: initialState.isPlaying,
+					});
+				},
+			}))
+		)
+	);
 };
 export function useCreateStore(initialState) {
 	// For SSR & SSG, always use a new store.
@@ -85,3 +111,4 @@ export function useCreateStore(initialState) {
 
 	return () => store;
 }
+

@@ -12,5 +12,6 @@ module.exports = {
 	presets :[
 		require('tw-utils/font/poppins/'),
 		require('tw-utils/colors/full'),
+		require('full-palette')
 	]
 };

@@ -6,12 +6,15 @@ import { useEffect } from "react";
 export default function SpotifyProvider({ children }) {
 	const [session, loading] = useSession();
 	const isPlaying = useStore((state) => state.isPlaying);
+	const spotifyRunning = useStore((state) => state.spotifyRunning);
+	const setSpotifyRunning = useStore((state) => state.setSpotifyRunning);
+	const setSpotifyNotRunning = useStore((state) => state.setSpotifyNotRunning);
 	const setPlaying = useStore((state) => state.setPlaying);
 	const setSong = useStore((state) => state.setSong);
 	const setNotPlaying = useStore((state) => state.setNotPlaying);
 
-	const { data, error } = useSWR(
-		session ? "https://api.spotify.com/v1/me/player/currently-playing" : null,
+	const { data, error, mutate } = useSWR(
+		session ? "/api/spotify-now" : null,
 		(url) =>
 			fetcher(url, {
 				method: "GET",
@@ -21,30 +24,34 @@ export default function SpotifyProvider({ children }) {
 					Authorization: `Bearer ${session.accessToken}`,
 				},
 			}),
-		{ refreshInterval: 5000 }
+		{
+			refreshInterval: 5000,
+		}
 	);
 
 	useEffect(() => {
+		console.log("hey");
 		if (data) {
-			data.is_playing ? setPlaying() : setNotPlaying();
-			data.item
-				? setSong({
-						name: data.item.name,
-						artist: data.item.artists[0].name,
-						album: data.item.album.name,
-						progress_ms: data.progress_ms,
-						duration_ms: data.item.duration_ms,
-						link: data.item.external_urls.spotify,
-						covers: data.item.album.images,
-				  })
-				: null;
+			if (data.is_playing) {
+				setPlaying();
+				setSpotifyRunning();
+			} else if (data.is_playing == undefined) {
+				setNotPlaying();
+				setSpotifyNotRunning();
+			} else {
+				setNotPlaying();
+				setSpotifyRunning();
+			}
+
+			console.log("data", data);
+			setSong(data);
 		} else {
 			setNotPlaying();
 		}
 	}, [data]);
 
 	if (error) {
-		console.log(error);
+		console.error(error);
 		return <div>failed to load referrer to console</div>;
 	}
 	if (!data) {

@@ -4,6 +4,7 @@ import { Provider as NextAuthProvider } from "next-auth/client";
 import { useCreateStore, Provider as ZustandProvider } from "../libs/store";
 import SpotifyProvider from "../components/SpotifyProvider";
 import { config } from "../libs";
+import { LazyMotion, domAnimation } from "framer-motion";
 
 export default function App({ Component, pageProps }) {
 	const createStore = useCreateStore(pageProps.initialZustandState);
@@ -16,9 +17,11 @@ export default function App({ Component, pageProps }) {
 					keepAlive: config.KEEP_ALIVE,
 				}}
 			>
-				<SpotifyProvider>
-					<Component {...pageProps} />
-				</SpotifyProvider>
+				<LazyMotion features={domAnimation}>
+					<SpotifyProvider>
+						<Component {...pageProps} />
+					</SpotifyProvider>
+				</LazyMotion>
 			</NextAuthProvider>
 		</ZustandProvider>
 	);
