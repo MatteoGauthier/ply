@@ -13,7 +13,7 @@ export default function SpotifyProvider({ children }) {
 	const setSong = useStore((state) => state.setSong);
 	const setNotPlaying = useStore((state) => state.setNotPlaying);
 
-	const { data, error, mutate } = useSWR(
+	const { data, error } = useSWR(
 		session ? "/api/spotify-now" : null,
 		(url) =>
 			fetcher(url, {
@@ -26,6 +26,7 @@ export default function SpotifyProvider({ children }) {
 			}),
 		{
 			refreshInterval: 5000,
+			// refreshWhenHidden: false,
 		}
 	);
 

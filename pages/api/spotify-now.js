@@ -51,18 +51,36 @@ const fetchRecentlyPlayed = async (accessToken) => {
 	}
 };
 
+async function getPlayerSongWithFeatures(accessToken) {
+	const songFetch = async () => {
+		const currentlyPlaying = await fetchCurrentlyPlaying(accessToken);
+		if (!currentlyPlaying) {
+			log(`Spotify: No currently playing track, falling back to /recently-played"`);
+			let lastPlayedSong = await fetchRecentlyPlayed(accessToken);
+			log(`Spotify: Last played song: ${lastPlayedSong.name}`);
+			return lastPlayedSong;
+		}
+		log(`Spotify: Currently playing track: ${currentlyPlaying.name}`);
+		return currentlyPlaying;
+	};
+
+	const song = await songFetch();
+
+	const features = await fetcher(
+		`https://api.spotify.com/v1/audio-features/${song.uri.split(":")[2]}`,
+		config(accessToken)
+	);
+	return {
+		...song,
+		features,
+	};
+}
+
 export default async function handler(req, res) {
 	const headers = req.headers;
 	if (!headers.authorization) return res.status(401).end();
 	const accessToken = headers.authorization.split(" ")[1];
 	if (!accessToken) return res.status(401).end();
-	const currentlyPlaying = await fetchCurrentlyPlaying(accessToken);
-	if (!currentlyPlaying) {
-		log(`Spotify: No currently playing track, falling back to /recently-played"`);
-		let lastPlayedSong = await fetchRecentlyPlayed(accessToken);
-		log(`Spotify: Last played song: ${lastPlayedSong.name}`);
-		return res.json(lastPlayedSong);
-	}
-	log(`Spotify: Currently playing track: ${currentlyPlaying.name}`);
-	return res.json(currentlyPlaying);
+	const song = await getPlayerSongWithFeatures(accessToken)
+	return res.json(song);
 }

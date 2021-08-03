@@ -5,6 +5,7 @@ import { useCreateStore, Provider as ZustandProvider } from "../libs/store";
 import SpotifyProvider from "../components/SpotifyProvider";
 import { config } from "../libs";
 import { LazyMotion, domAnimation } from "framer-motion";
+import { Toaster } from "react-hot-toast";
 
 export default function App({ Component, pageProps }) {
 	const createStore = useCreateStore(pageProps.initialZustandState);
@@ -19,6 +20,7 @@ export default function App({ Component, pageProps }) {
 			>
 				<LazyMotion features={domAnimation}>
 					<SpotifyProvider>
+						<Toaster />
 						<Component {...pageProps} />
 					</SpotifyProvider>
 				</LazyMotion>
